@@ -1,0 +1,49 @@
+name: Build DevSecOps Vault PDF
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'DevSecOps Vault PDF'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+            pandoc \
+            texlive-latex-base \
+            texlive-latex-recommended \
+            texlive-fonts-recommended \
+            texlive-xetex \
+            fonts-dejavu \
+            librsvg2-bin
+
+      - name: Merge Markdown files
+        run: chmod +x merge.sh; ./merge.sh
+
+      - name: Convert Markdown to PDF
+        run: chmod +x pdf.sh; ./pdf.sh
+
+      - name: 📤 Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DevSecOps-Vault-PDF
+          path: output/devsecops-vault.pdf
+
+      - name: 🚀 Create GitHub Release and Upload PDF
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: DevSecOps Vault ${{ github.event.inputs.version }}
+          files: output/devsecops-vault.pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
